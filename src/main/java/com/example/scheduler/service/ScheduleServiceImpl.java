@@ -45,6 +45,12 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     @Override
+    public List<ScheduleResponseDto> findSchedulesByAuthorId(Long authorId) {
+        return scheduleRepository.findSchedulesByAuthorId(authorId);
+    }
+
+
+    @Override
     public void deleteSchedule(Long id) {
         scheduleRepository.deleteSchedule(id);
     }

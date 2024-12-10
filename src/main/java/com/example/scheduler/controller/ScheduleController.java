@@ -53,6 +53,14 @@ public class ScheduleController {
         return new ResponseEntity<>(scheduleService.findScheduleById(id), HttpStatus.OK);
     }
 
+
+    @GetMapping("/author/{authorId}")
+    public ResponseEntity<List<ScheduleResponseDto>> getSchedulesByAuthorId(@PathVariable Long authorId) {
+        List<ScheduleResponseDto> schedules = scheduleService.findSchedulesByAuthorId(authorId);
+        return ResponseEntity.ok(schedules);
+    }
+
+
     /**
      * 일정 수정 API
      *

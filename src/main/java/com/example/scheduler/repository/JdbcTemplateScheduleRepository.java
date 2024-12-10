@@ -11,8 +11,6 @@ import org.springframework.stereotype.Repository;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.sql.DataSource;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -29,8 +27,9 @@ public class JdbcTemplateScheduleRepository implements ScheduleRepository {
     }
 
     /**
-     * 일정 저장 메서드
-     * 작성자 이름도 schedule 테이블에 함께 저장
+     * 일정 작성 API
+     * @param schedule
+     * @return
      */
     @Override
     public ScheduleResponseDto saveSchedule(Schedule schedule) {
@@ -61,8 +60,10 @@ public class JdbcTemplateScheduleRepository implements ScheduleRepository {
 
 
     /**
-     * 모든 일정 조회
-     * 작성자의 이름을 포함해서 조회
+     * 모든 일정 조회하는 API
+     * @param page 페이지 번호
+     * @param size 페이지 사이즈
+     * @return
      */
     @Override
     public List<ScheduleResponseDto> findAllSchedules(int page, int size) {
@@ -82,8 +83,9 @@ public class JdbcTemplateScheduleRepository implements ScheduleRepository {
     }
 
     /**
-     * 특정 일정 조회 (ID 기준)
-     * 작성자 이름도 포함해서 조회
+     * 작성글id로 조회하는 APU
+     * @param id
+     * @return
      */
     @Override
     public Schedule findScheduleByIdOrElseThrow(Long id) {
@@ -96,10 +98,36 @@ public class JdbcTemplateScheduleRepository implements ScheduleRepository {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Schedule " + id + " not found"));
     }
 
+    /**
+     * 작성자id 로 작성글 조회하는 API
+     * @param authorId
+     * @return
+     */
+    @Override
+    public List<ScheduleResponseDto> findSchedulesByAuthorId(Long authorId) {
+        String sql = "SELECT s.id, s.task, s.author_id, a.name AS author_name, s.created_at, s.updated_at " +
+                "FROM schedule s " +
+                "JOIN author a ON s.author_id = a.id " +
+                "WHERE s.author_id = ?";
+
+        return jdbcTemplate.query(sql, (rs, rowNum) -> new ScheduleResponseDto(
+                rs.getLong("id"),
+                rs.getString("task"),
+                rs.getLong("author_id"),
+                rs.getString("author_name"),
+                rs.getTimestamp("created_at").toLocalDateTime(),
+                rs.getTimestamp("updated_at").toLocalDateTime()
+        ), authorId);
+    }
+
 
     /**
-     * 일정 수정 메서드
-     * 할 일, 작성자 이름, 비밀번호 업데이트 가능
+     * 일정 수정 API
+     * @param id
+     * @param task
+     * @param name
+     * @param password
+     * @return
      */
     @Override
     public int updateSchedule(Long id, String task, String name, String password) {
@@ -111,7 +139,9 @@ public class JdbcTemplateScheduleRepository implements ScheduleRepository {
     }
 
     /**
-     * 일정 삭제 메서드
+     * 일정 삭제 API
+     * @param id
+     * @return
      */
     @Override
     public int deleteSchedule(Long id) {
@@ -119,18 +149,15 @@ public class JdbcTemplateScheduleRepository implements ScheduleRepository {
         return jdbcTemplate.update(sql, id);
     }
 
-    /**
-     * RowMapper: Schedule 객체 생성
-     */
     private RowMapper<Schedule> scheduleRowMapper() {
         return (rs, rowNum) -> new Schedule(
-                rs.getLong("id"),                        // id
-                rs.getString("task"),                    // task
-                rs.getLong("author_id"),                 // author_id
-                rs.getString("name"),             // name (schedule 테이블의 컬럼)
-                rs.getString("password"),                // password
-                rs.getTimestamp("created_at").toLocalDateTime(),  // created_at
-                rs.getTimestamp("updated_at").toLocalDateTime()   // updated_at
+                rs.getLong("id"),
+                rs.getString("task"),
+                rs.getLong("author_id"),
+                rs.getString("name"),
+                rs.getString("password"),
+                rs.getTimestamp("created_at").toLocalDateTime(),
+                rs.getTimestamp("updated_at").toLocalDateTime()
         );
     }
 
