@@ -19,10 +19,5 @@ public class AuthorServiceImpl implements AuthorService {
         return authorRepository.saveAuthor(author);
     }
 
-    @Override
-    public Author findAuthorById(Long id) {
-        return null;
-    }
-
 }
 
