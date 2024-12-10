@@ -65,10 +65,11 @@ public class JdbcTemplateScheduleRepository implements ScheduleRepository {
      * 작성자의 이름을 포함해서 조회
      */
     @Override
-    public List<ScheduleResponseDto> findAllSchedules() {
-        String sql = "SELECT s.id, s.task, s.author_id, s.name, s.created_at, s.updated_at " +
-                "FROM schedule s " +
-                "JOIN author a ON s.author_id = a.id";
+    public List<ScheduleResponseDto> findAllSchedules(int page, int size) {
+
+        int offset = (page-1) * size;
+        String sql = "SELECT s.id, s.task, s.author_id, a.name, s.created_at, s.updated_at FROM schedule s JOIN author a ON s.author_id = a.id LIMIT ?, ?";
+
 
         return jdbcTemplate.query(sql, (rs, rowNum) -> new ScheduleResponseDto(
                 rs.getLong("id"),
@@ -77,7 +78,7 @@ public class JdbcTemplateScheduleRepository implements ScheduleRepository {
                 rs.getString("name"),  // 작성자 이름
                 rs.getTimestamp("created_at").toLocalDateTime(),
                 rs.getTimestamp("updated_at").toLocalDateTime()
-        ));
+        ), offset, size);
     }
 
     /**
@@ -86,14 +87,13 @@ public class JdbcTemplateScheduleRepository implements ScheduleRepository {
      */
     @Override
     public Schedule findScheduleByIdOrElseThrow(Long id) {
-        String sql = "SELECT id, task, author_id, name, password, created_at, updated_at " +
-                "FROM schedule WHERE id = ?";
+        String sql = "SELECT * FROM schedule WHERE id = ?";
 
         List<Schedule> result = jdbcTemplate.query(sql, scheduleRowMapper(), id);
 
         return result.stream()
                 .findAny()
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Schedule with ID " + id + " not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Schedule " + id + " not found"));
     }
 
 
@@ -127,7 +127,7 @@ public class JdbcTemplateScheduleRepository implements ScheduleRepository {
                 rs.getLong("id"),                        // id
                 rs.getString("task"),                    // task
                 rs.getLong("author_id"),                 // author_id
-                rs.getString("name"),                    // name (schedule 테이블의 컬럼)
+                rs.getString("name"),             // name (schedule 테이블의 컬럼)
                 rs.getString("password"),                // password
                 rs.getTimestamp("created_at").toLocalDateTime(),  // created_at
                 rs.getTimestamp("updated_at").toLocalDateTime()   // updated_at
