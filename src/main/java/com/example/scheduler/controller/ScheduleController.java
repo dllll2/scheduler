@@ -56,8 +56,7 @@ public class ScheduleController {
 
     @GetMapping("/author/{authorId}")
     public ResponseEntity<List<ScheduleResponseDto>> getSchedulesByAuthorId(@PathVariable Long authorId) {
-        List<ScheduleResponseDto> schedules = scheduleService.findSchedulesByAuthorId(authorId);
-        return ResponseEntity.ok(schedules);
+    return new ResponseEntity<>(scheduleService.findSchedulesByAuthorId(authorId),HttpStatus.OK);
     }
 
 
